@@ -10,7 +10,6 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -45,55 +44,64 @@ export default function LoginPage() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sign In</CardTitle>
-        <CardDescription>
-          Enter your credentials to access your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-            />
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-black text-foreground">Welcome back</h1>
+        <p className="mt-2 text-[var(--muted)]">
+          Sign in to continue to your dashboard
+        </p>
+      </div>
+
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading}
+            className="h-12"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={loading}
+            className="h-12"
+          />
+        </div>
+        {error && (
+          <div className="rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 p-4 text-sm text-[var(--danger)]">
+            {error}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-          </div>
-          {error && (
-            <div className="text-sm text-red-600 dark:text-red-400">
-              {error}
-            </div>
+        )}
+        <Button type="submit" className="w-full h-12 rounded-2xl text-base" disabled={loading}>
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              Signing in...
+            </span>
+          ) : (
+            'Sign in'
           )}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </Button>
-          <div className="text-center text-sm">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-foreground hover:underline">
-              Sign up
-            </Link>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        </Button>
+      </form>
+
+      <p className="text-center text-sm text-[var(--muted)]">
+        Don&apos;t have an account?{' '}
+        <Link href="/signup" className="font-semibold text-[var(--primary)] hover:underline">
+          Create one
+        </Link>
+      </p>
+    </div>
   );
 }

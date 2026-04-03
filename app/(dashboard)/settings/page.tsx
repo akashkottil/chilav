@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { usePartner } from '@/context/PartnerContext';
 import { createClient } from '@/lib/supabase/client';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Copy, Check, X, Mail, UserPlus, RefreshCw } from 'lucide-react';
+import { Copy, Check, Mail, UserPlus, RefreshCw } from 'lucide-react';
 import { CategoryList } from '@/components/categories/CategoryList';
 
 export default function SettingsPage() {
@@ -24,12 +24,10 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
 
   const generateInvitationToken = () => {
-    // Generate a secure random token (64 characters hex)
     const array = new Uint8Array(32);
     if (typeof window !== 'undefined' && window.crypto) {
       window.crypto.getRandomValues(array);
     } else {
-      // Fallback for server-side or environments without crypto
       for (let i = 0; i < array.length; i++) {
         array[i] = Math.floor(Math.random() * 256);
       }
@@ -46,26 +44,22 @@ export default function SettingsPage() {
     setInvitationSent(false);
 
     try {
-      // Check if user already has a partner
       if (partner) {
         setError('You already have a partner linked. Please remove the existing partnership first.');
         setSendingInvitation(false);
         return;
       }
 
-      // Check if email is the same as current user
       if (invitationEmail.toLowerCase() === user.email?.toLowerCase()) {
         setError('You cannot invite yourself.');
         setSendingInvitation(false);
         return;
       }
 
-      // Generate invitation token
       const token = generateInvitationToken();
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+      expiresAt.setDate(expiresAt.getDate() + 7);
 
-      // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(invitationEmail)) {
         setError('Please enter a valid email address.');
@@ -73,7 +67,6 @@ export default function SettingsPage() {
         return;
       }
 
-      // Create invitation
       const { data, error: invError } = await supabase
         .from('partner_invitations')
         .insert({
@@ -95,8 +88,6 @@ export default function SettingsPage() {
         throw new Error('No data returned from invitation creation');
       }
 
-      // Generate invitation link
-      // Use environment variable for production, fallback to window.location for development
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
       const link = `${baseUrl}/signup?token=${token}`;
       setInvitationLink(link);
@@ -104,9 +95,8 @@ export default function SettingsPage() {
       setInvitationEmail('');
     } catch (err: unknown) {
       console.error('Error sending invitation:', err);
-      // Show more detailed error message
       let errorMessage = 'Failed to send invitation. Please try again.';
-      
+
       if (err && typeof err === 'object') {
         const errorObj = err as { code?: string; message?: string; error?: { message?: string } };
         if (errorObj.code === '23505') {
@@ -121,7 +111,7 @@ export default function SettingsPage() {
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
     } finally {
       setSendingInvitation(false);
@@ -138,16 +128,11 @@ export default function SettingsPage() {
     }
   };
 
-  // Get partner email for display (simplified - showing partner relationship exists)
-  const partnerEmail = partner 
-    ? (partner.user1_id === user?.id ? 'Partner' : 'Partner') 
-    : null;
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <h1 className="text-3xl font-black text-foreground tracking-tight">Settings</h1>
+        <p className="text-[var(--muted)] mt-1">
           Manage your account and preferences
         </p>
       </div>
@@ -155,9 +140,12 @@ export default function SettingsPage() {
       {/* Partner Management */}
       <Card>
         <CardHeader>
-          <CardTitle>Partner Management</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-[var(--primary)]" />
+            Partner Management
+          </CardTitle>
           <CardDescription>
-            {partner 
+            {partner
               ? 'You are linked with your partner. You can view and manage shared expenses.'
               : 'Invite your partner to start sharing expenses together'}
           </CardDescription>
@@ -165,13 +153,13 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           {partner ? (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-                <UserPlus className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--success)]/5 border border-[var(--success)]/20">
+                <div className="h-10 w-10 rounded-xl bg-[var(--success)]/10 flex items-center justify-center">
+                  <UserPlus className="h-5 w-5 text-[var(--success)]" />
+                </div>
                 <div className="flex-1">
-                  <p className="font-medium text-green-900 dark:text-green-100">
-                    Partner Linked
-                  </p>
-                  <p className="text-sm text-green-700 dark:text-green-300">
+                  <p className="font-semibold text-[var(--success)]">Partner Linked</p>
+                  <p className="text-sm text-[var(--muted)]">
                     You can now share expenses and view analytics together.
                   </p>
                 </div>
@@ -190,33 +178,31 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Refresh button for users waiting for partner */}
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={async () => {
                   await refreshPartner();
-                  // Force a re-check by querying directly
                   const { data: partnerData } = await supabase
                     .from('partners')
                     .select('*')
                     .or(`user1_id.eq.${user?.id},user2_id.eq.${user?.id}`)
                     .eq('status', 'active')
                     .single();
-                  
+
                   if (partnerData) {
                     await refreshPartner();
                     alert('Partner found! Refreshing page...');
                     window.location.reload();
                   } else {
-                    alert('No partner linked yet. Make sure your partner has signed up using the invitation link you sent them. If they already signed up, the partner relationship might not have been created. Check the browser console for errors.');
+                    alert('No partner linked yet. Make sure your partner has signed up using the invitation link.');
                   }
                 }}
-                className="w-full mb-4"
+                className="w-full"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Check Partner Status
               </Button>
-            <div className="space-y-4">
+
               <form onSubmit={handleSendInvitation} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="invitationEmail">Partner Email</Label>
@@ -233,11 +219,14 @@ export default function SettingsPage() {
                     />
                     <Button type="submit" disabled={sendingInvitation}>
                       {sendingInvitation ? (
-                        'Sending...'
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                          Sending...
+                        </span>
                       ) : (
                         <>
                           <Mail className="h-4 w-4 mr-2" />
-                          Send Invitation
+                          Send
                         </>
                       )}
                     </Button>
@@ -245,31 +234,30 @@ export default function SettingsPage() {
                 </div>
 
                 {error && (
-                  <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                    <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-1">{error}</p>
-                    <p className="text-xs text-red-500 dark:text-red-500 mt-2">
-                      <strong>Debug tip:</strong> Check the browser console (F12) for detailed error information. 
-                      Make sure you've run all database migrations including RLS policies.
+                  <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 p-4">
+                    <p className="text-sm font-medium text-[var(--danger)]">{error}</p>
+                    <p className="text-xs text-[var(--muted)] mt-2">
+                      Check the browser console (F12) for detailed error information.
                     </p>
                   </div>
                 )}
 
                 {invitationSent && invitationLink && (
-                  <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-3">
-                    <div className="flex items-start gap-2">
-                      <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <div className="rounded-xl bg-[var(--primary)]/5 border border-[var(--primary)]/15 p-5 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center flex-shrink-0">
+                        <Mail className="h-5 w-5 text-[var(--primary)]" />
+                      </div>
                       <div className="flex-1">
-                        <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                          Invitation Sent!
-                        </p>
-                        <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                          Share this link with your partner. They need to sign up using this link.
+                        <p className="font-semibold text-foreground mb-1">Invitation Created!</p>
+                        <p className="text-sm text-[var(--muted)] mb-3">
+                          Share this link with your partner to get started.
                         </p>
                         <div className="flex items-center gap-2">
                           <Input
                             value={invitationLink}
                             readOnly
-                            className="flex-1 font-mono text-xs bg-white dark:bg-gray-800"
+                            className="flex-1 font-mono text-xs"
                           />
                           <Button
                             type="button"
@@ -280,12 +268,12 @@ export default function SettingsPage() {
                           >
                             {copied ? (
                               <>
-                                <Check className="h-4 w-4 mr-2" />
-                                Copied!
+                                <Check className="h-4 w-4 mr-1 text-[var(--success)]" />
+                                Copied
                               </>
                             ) : (
                               <>
-                                <Copy className="h-4 w-4 mr-2" />
+                                <Copy className="h-4 w-4 mr-1" />
                                 Copy
                               </>
                             )}
@@ -297,13 +285,12 @@ export default function SettingsPage() {
                 )}
               </form>
 
-              <div className="p-3 rounded-md bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  <strong>Note:</strong> Your partner will need to create an account using the invitation link. 
-                  Once they sign up, you'll be automatically linked and can start sharing expenses.
+              <div className="rounded-xl bg-[var(--surface-hover)] p-4">
+                <p className="text-xs text-[var(--muted)]">
+                  Your partner will need to create an account using the invitation link.
+                  Once they sign up, you&apos;ll be automatically linked.
                 </p>
               </div>
-            </div>
             </div>
           )}
         </CardContent>
@@ -314,7 +301,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Categories</CardTitle>
           <CardDescription>
-            Manage your expense categories and subcategories. Default categories cannot be edited or deleted.
+            Manage your expense categories and subcategories.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -5,20 +5,17 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Home, 
-  DollarSign, 
-  BarChart3, 
-  Settings, 
+import {
+  Home,
+  Receipt,
+  BarChart3,
+  Settings,
   LogOut,
   Menu,
   X,
-  Search,
-  Bell,
-  User,
-  TrendingUp
+  TrendingUp,
+  Sparkles,
+  Plus
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils/cn';
@@ -41,18 +38,20 @@ export default function DashboardLayout({
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] mesh-gradient">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl gradient-bg animate-pulse" />
+          <div className="h-1 w-24 rounded-full bg-[var(--border)] overflow-hidden">
+            <div className="h-full w-1/2 rounded-full gradient-bg animate-[shimmer_1s_infinite]" />
+          </div>
         </div>
       </div>
     );
   }
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Expenses', href: '/expenses', icon: DollarSign },
+    { name: 'Home', href: '/dashboard', icon: Home },
+    { name: 'Expenses', href: '/expenses', icon: Receipt },
     { name: 'Investments', href: '/investments', icon: TrendingUp },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Settings', href: '/settings', icon: Settings },
@@ -67,18 +66,37 @@ export default function DashboardLayout({
     return email.substring(0, 2).toUpperCase();
   };
 
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Modern Sidebar - Icon Only */}
-      <aside className="hidden md:flex md:flex-col md:w-20 md:fixed md:inset-y-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
-        <div className="flex flex-col items-center py-6 space-y-6">
+    <div className="flex min-h-screen bg-[var(--background)] mesh-gradient">
+      {/* Sidebar - Desktop */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-[260px] lg:fixed lg:inset-y-0 bg-[var(--surface)] border-r border-[var(--border)]">
+        <div className="flex flex-col h-full p-5">
           {/* Logo */}
-          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600">
-            <span className="text-white font-bold text-xl">ET</span>
+          <div className="flex items-center gap-2.5 mb-8">
+            <div className="h-9 w-9 rounded-xl gradient-bg flex items-center justify-center shadow-lg shadow-[var(--primary)]/20">
+              <span className="text-white font-black text-sm">C</span>
+            </div>
+            <span className="text-lg font-black tracking-tight text-foreground">chilav</span>
           </div>
 
-          {/* Navigation Icons */}
-          <nav className="flex-1 flex flex-col items-center space-y-4">
+          {/* Quick action */}
+          <button
+            onClick={() => router.push('/expenses')}
+            className="flex items-center gap-3 w-full px-4 py-3 mb-6 rounded-2xl gradient-bg text-white font-semibold text-sm hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-[var(--primary)]/20"
+          >
+            <Plus className="h-4 w-4" />
+            New Expense
+          </button>
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               return (
@@ -86,128 +104,109 @@ export default function DashboardLayout({
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center justify-center w-12 h-12 rounded-lg transition-colors",
+                    "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      ? "bg-[var(--primary)]/8 text-[var(--primary)] font-semibold"
+                      : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-foreground"
                   )}
-                  title={item.name}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-[18px] w-[18px]" />
+                  {item.name}
+                  {isActive && (
+                    <div className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--primary)]" />
+                  )}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Bottom Actions */}
-          <div className="flex flex-col items-center space-y-4">
-            <ThemeToggle />
-            <button
-              onClick={handleSignOut}
-              className="flex items-center justify-center w-12 h-12 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              title="Sign Out"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
+          {/* Bottom section */}
+          <div className="space-y-3 pt-4 border-t border-[var(--border)]">
+            <div className="flex items-center justify-between px-1">
+              <ThemeToggle />
+              <button
+                onClick={handleSignOut}
+                className="flex items-center justify-center h-9 w-9 rounded-xl text-[var(--muted)] hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all"
+                title="Sign Out"
+              >
+                <LogOut className="h-[18px] w-[18px]" />
+              </button>
+            </div>
+
+            {/* User card */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-hover)]">
+              <div className="h-10 w-10 rounded-xl gradient-bg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                {getUserInitials(user.email || 'U')}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {user.email?.split('@')[0] || 'User'}
+                </p>
+                <p className="text-xs text-[var(--muted)] truncate">{user.email}</p>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* Mobile sidebar */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setMobileMenuOpen(false)} />
-          <div className="relative flex flex-col w-full max-w-xs bg-white dark:bg-gray-900">
-            <div className="absolute top-0 right-0 -mr-12 pt-2">
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+      {/* Mobile bottom nav */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-[var(--border)] safe-area-pb">
+        <nav className="flex items-center justify-around px-2 py-2">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 min-w-[60px]",
+                  isActive
+                    ? "text-[var(--primary)]"
+                    : "text-[var(--muted)]"
+                )}
               >
-                <X className="h-6 w-6 text-white" />
-              </button>
+                <item.icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium">{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Mobile header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 glass border-b border-[var(--border)]">
+        <div className="flex items-center justify-between px-5 py-3">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg gradient-bg flex items-center justify-center">
+              <span className="text-white font-black text-xs">C</span>
             </div>
-            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-              <div className="flex-shrink-0 flex items-center px-4 mb-6">
-                <h1 className="text-2xl font-bold text-foreground">Expense Tracker</h1>
-              </div>
-              <nav className="px-2 space-y-1">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      "group flex items-center px-3 py-2 text-sm font-medium rounded-lg",
-                      pathname === item.href
-                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    )}
-                  >
-                    <item.icon className="mr-3 h-5 w-5" />
-                    {item.name}
-                  </Link>
-                ))}
-              </nav>
+            <span className="text-base font-black text-foreground">chilav</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <div className="h-8 w-8 rounded-lg gradient-bg flex items-center justify-center text-white font-bold text-xs">
+              {getUserInitials(user.email || 'U')}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Main content */}
-      <div className="md:pl-20 flex flex-col w-full">
-        {/* Top Navigation Bar */}
-        <header className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex items-center justify-between h-full px-6">
-            {/* Left: Mobile menu + Search */}
-            <div className="flex items-center gap-4 flex-1">
-              <button
-                type="button"
-                className="md:hidden text-gray-500"
-                onClick={() => setMobileMenuOpen(true)}
-              >
-                <Menu className="h-6 w-6" />
-              </button>
-
-              {/* Search Bar */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search expenses, categories..."
-                  className="pl-10 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                />
-              </div>
-            </div>
-
-            {/* Right: Notifications + User Profile */}
-            <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <button className="relative p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-              </button>
-
-              {/* Theme Toggle */}
-              <ThemeToggle />
-
-              {/* User Profile */}
-              <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700">
-                <div className="flex flex-col text-right">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {user.email?.split('@')[0] || 'User'}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">User</span>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold">
-                  {getUserInitials(user.email || 'U')}
-                </div>
-              </div>
+      <div className="lg:pl-[260px] flex flex-col w-full">
+        {/* Page header area - Desktop */}
+        <div className="hidden lg:block px-8 pt-8 pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[var(--muted)] flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" />
+                {getGreeting()}, {user.email?.split('@')[0]}
+              </p>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Page content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 px-5 lg:px-8 pt-20 lg:pt-2 pb-24 lg:pb-8 overflow-auto">
           {children}
         </main>
       </div>

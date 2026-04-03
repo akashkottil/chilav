@@ -6,7 +6,7 @@ import { Investment } from '@/lib/types/investment';
 import { InvestmentCard } from './InvestmentCard';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+import { Plus, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatters';
 
 interface InvestmentListProps {
@@ -31,10 +31,8 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
     }
   };
 
-  // Calculate totals by type
   const totalsByType = useMemo(() => {
     const totals = new Map<string, { deposits: number; withdrawals: number }>();
-    
     investments.forEach(inv => {
       const current = totals.get(inv.investment_type_id) || { deposits: 0, withdrawals: 0 };
       if (inv.transaction_type === 'deposit') {
@@ -44,14 +42,11 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
       }
       totals.set(inv.investment_type_id, current);
     });
-
     return totals;
   }, [investments]);
 
-  // Create lookup maps
   const typeMap = new Map(investmentTypes.map(type => [type.id, { name: type.name, icon: type.icon }]));
 
-  // Calculate overall totals
   const overallTotal = useMemo(() => {
     return investments.reduce((sum, inv) => {
       return inv.transaction_type === 'deposit' ? sum + inv.amount : sum - inv.amount;
@@ -59,9 +54,10 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
   }, [investments]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Investments</h2>
+        <h2 className="text-3xl font-black text-foreground tracking-tight">Investments</h2>
         <Button onClick={onAddNew}>
           <Plus className="h-4 w-4 mr-2" />
           Add Investment
@@ -69,12 +65,10 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-            Net Investment
-          </div>
-          <div className={`text-2xl font-bold ${overallTotal >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5">
+          <div className="text-sm font-medium text-[var(--muted)] mb-2">Net Investment</div>
+          <div className={`text-2xl font-extrabold ${overallTotal >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
             {formatCurrency(Math.abs(overallTotal))}
           </div>
         </div>
@@ -83,11 +77,11 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
           if (!type) return null;
           const net = totals.deposits - totals.withdrawals;
           return (
-            <div key={typeId} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-              <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <div key={typeId} className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5">
+              <div className="text-sm font-medium text-[var(--muted)] mb-2">
                 {type.icon} {type.name}
               </div>
-              <div className={`text-xl font-bold ${net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              <div className={`text-xl font-extrabold ${net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                 {formatCurrency(Math.abs(net))}
               </div>
             </div>
@@ -96,7 +90,7 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <Select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
@@ -112,7 +106,7 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
         <Select
           value={transactionFilter}
           onChange={(e) => setTransactionFilter(e.target.value as 'deposit' | 'withdrawal' | '')}
-          className="w-32"
+          className="w-36"
         >
           <option value="">All</option>
           <option value="deposit">Deposits</option>
@@ -120,14 +114,20 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
         </Select>
       </div>
 
+      {/* Content */}
       {loading ? (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          Loading investments...
+        <div className="space-y-3">
+          {[1,2,3].map(i => (
+            <div key={i} className="h-20 rounded-2xl shimmer" />
+          ))}
         </div>
       ) : investments.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          <p className="text-lg font-medium mb-2">No investments found</p>
-          <p className="text-sm mb-4">Start tracking your investments by adding your first one</p>
+        <div className="text-center py-16">
+          <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-[var(--surface-hover)] flex items-center justify-center">
+            <TrendingUp className="h-8 w-8 text-[var(--muted)]" />
+          </div>
+          <p className="text-lg font-bold text-foreground mb-1">No investments found</p>
+          <p className="text-sm text-[var(--muted)] mb-5">Start tracking your investments</p>
           <Button onClick={onAddNew}>
             <Plus className="h-4 w-4 mr-2" />
             Add Your First Investment
@@ -153,4 +153,3 @@ export function InvestmentList({ onAddNew, onEdit }: InvestmentListProps) {
     </div>
   );
 }
-

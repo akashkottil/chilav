@@ -3,7 +3,6 @@
 import { Expense } from '@/lib/types/expense';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Edit2, Trash2, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { usePartner } from '@/context/PartnerContext';
@@ -21,21 +20,14 @@ export function ExpenseCard({ expense, categoryName, subcategoryName, paymentSou
   const { user } = useAuth();
   const { partner } = usePartner();
 
-  // Determine who paid
   const getPaidByName = () => {
     if (!expense.paid_by_user_id) return null;
-    if (expense.paid_by_user_id === user?.id) {
-      return user?.user_metadata?.full_name || user?.email || 'You';
-    }
-    // Otherwise it's the partner
+    if (expense.paid_by_user_id === user?.id) return user?.user_metadata?.full_name || user?.email || 'You';
     return 'Partner';
   };
 
-  // Determine expense owner
   const getExpenseOwner = () => {
-    if (expense.user_id === user?.id) {
-      return user?.user_metadata?.full_name || user?.email || 'You';
-    }
+    if (expense.user_id === user?.id) return user?.user_metadata?.full_name || user?.email || 'You';
     return 'Partner';
   };
 
@@ -44,113 +36,53 @@ export function ExpenseCard({ expense, categoryName, subcategoryName, paymentSou
   const isOwnExpense = expense.user_id === user?.id;
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-2xl">{expense.custom_icon || '💰'}</span>
-              <span className="text-lg font-semibold">{formatCurrency(expense.amount)}</span>
-              {expense.is_shared && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
-                  <Users className="h-3 w-3" />
-                  Shared
-                </span>
-              )}
-            </div>
+    <div className="group flex items-center gap-4 p-4 -mx-2 rounded-2xl hover:bg-[var(--surface-hover)] transition-all duration-200">
+      <div className="flex-shrink-0 h-12 w-12 rounded-2xl bg-[var(--surface-alt)] flex items-center justify-center text-2xl">
+        {expense.custom_icon || '💰'}
+      </div>
 
-            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-              {categoryName && (
-                <div className="flex items-center gap-1">
-                  <span className="font-medium">Category:</span>
-                  <span>{categoryName}</span>
-                </div>
-              )}
-              {subcategoryName && (
-                <div className="flex items-center gap-1">
-                  <span className="font-medium">Subcategory:</span>
-                  <span>{subcategoryName}</span>
-                </div>
-              )}
-              {paymentSourceName && (
-                <div className="flex items-center gap-1">
-                  <span className="font-medium">Payment Source:</span>
-                  <span>{paymentSourceName}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-1">
-                <span className="font-medium">Date:</span>
-                <span>{formatDateTime(expense.date, expense.time)}</span>
-              </div>
-              {partner && (
-                <div className="flex items-center gap-1">
-                  <span className="font-medium">Added by:</span>
-                  <span>{expenseOwner}</span>
-                </div>
-              )}
-              {paidByName && (
-                <div className="flex items-center gap-1">
-                  <span className="font-medium">Paid by:</span>
-                  <span>{paidByName}</span>
-                </div>
-              )}
-              {expense.is_shared && expense.amount_paid_by_user !== null && expense.amount_paid_by_partner !== null && (
-                <div className="flex items-center gap-2 mt-1 pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex-1">
-                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Expense Split:</span>
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 space-y-0.5">
-                      <div>
-                        {expenseOwner === 'You' ? 'Your share' : `${expenseOwner}'s share`}: {formatCurrency(
-                          expense.user_id === user?.id 
-                            ? (expense.amount_paid_by_user || 0)
-                            : (expense.amount_paid_by_partner || 0)
-                        )}
-                      </div>
-                      <div>
-                        {expenseOwner === 'You' ? "Partner's share" : 'Your share'}: {formatCurrency(
-                          expense.user_id === user?.id 
-                            ? (expense.amount_paid_by_partner || 0)
-                            : (expense.amount_paid_by_user || 0)
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {expense.notes && (
-                <div className="mt-2 text-gray-700 dark:text-gray-300 italic">
-                  "{expense.notes}"
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-2 ml-4">
-            {/* Only show edit/delete for expenses owned by current user */}
-            {isOwnExpense && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEdit(expense)}
-                  aria-label="Edit expense"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(expense.id)}
-                  aria-label="Delete expense"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </>
-            )}
-          </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-foreground">{categoryName || 'Expense'}</span>
+          {expense.is_shared && (
+            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase bg-pink-500/10 text-pink-500">
+              Shared
+            </span>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex flex-wrap items-center gap-x-2 text-xs text-[var(--muted)] mt-0.5">
+          <span>{formatDateTime(expense.date, expense.time)}</span>
+          {subcategoryName && <><span>&middot;</span><span>{subcategoryName}</span></>}
+          {paymentSourceName && <><span>&middot;</span><span>{paymentSourceName}</span></>}
+          {partner && <><span>&middot;</span><span>{expenseOwner}</span></>}
+          {paidByName && <><span>&middot;</span><span>paid by {paidByName}</span></>}
+        </div>
+        {expense.is_shared && expense.amount_paid_by_user !== null && expense.amount_paid_by_partner !== null && (
+          <div className="flex items-center gap-3 mt-1 text-xs text-[var(--muted)]">
+            <span className="font-medium text-pink-500">Split:</span>
+            <span>{expenseOwner === 'You' ? 'You' : expenseOwner}: {formatCurrency(expense.user_id === user?.id ? (expense.amount_paid_by_user || 0) : (expense.amount_paid_by_partner || 0))}</span>
+            <span>{expenseOwner === 'You' ? 'Partner' : 'You'}: {formatCurrency(expense.user_id === user?.id ? (expense.amount_paid_by_partner || 0) : (expense.amount_paid_by_user || 0))}</span>
+          </div>
+        )}
+        {expense.notes && (
+          <p className="mt-1 text-xs italic text-[var(--muted)] truncate max-w-md">&ldquo;{expense.notes}&rdquo;</p>
+        )}
+      </div>
+
+      <span className="text-sm font-bold text-foreground tabular-nums whitespace-nowrap">
+        -{formatCurrency(expense.amount)}
+      </span>
+
+      {isOwnExpense && (
+        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(expense)} className="h-8 w-8 text-[var(--muted)] hover:text-[var(--primary)]">
+            <Edit2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => onDelete(expense.id)} className="h-8 w-8 text-[var(--muted)] hover:text-[var(--danger)]">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
-

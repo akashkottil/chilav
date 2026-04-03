@@ -63,7 +63,7 @@ export function InvestmentForm({ investment, onSubmit, onCancel, loading }: Inve
         <CardTitle>{investment ? 'Edit Investment' : 'Add New Investment'}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="investment_type_id">Investment Type</Label>
             <Select
@@ -97,7 +97,7 @@ export function InvestmentForm({ investment, onSubmit, onCancel, loading }: Inve
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label htmlFor="amount">Amount (INR)</Label>
             <Input
               id="amount"
               type="number"
@@ -134,7 +134,6 @@ export function InvestmentForm({ investment, onSubmit, onCancel, loading }: Inve
                   disabled={loading}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="interest_rate">Interest Rate % (Optional)</Label>
                 <Input
@@ -164,21 +163,26 @@ export function InvestmentForm({ investment, onSubmit, onCancel, loading }: Inve
           </div>
 
           {errors.length > 0 && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-3">
-              <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
+            <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 p-4">
+              <ul className="text-sm text-[var(--danger)] space-y-1">
                 {errors.map((error, index) => (
-                  <li key={index}>• {error}</li>
+                  <li key={index}>&#x2022; {error}</li>
                 ))}
               </ul>
             </div>
           )}
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-3 justify-end pt-2">
             <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : investment ? 'Update' : 'Add Investment'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Saving...
+                </span>
+              ) : investment ? 'Update' : 'Add Investment'}
             </Button>
           </div>
         </form>
@@ -186,4 +190,3 @@ export function InvestmentForm({ investment, onSubmit, onCancel, loading }: Inve
     </Card>
   );
 }
-

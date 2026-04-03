@@ -25,7 +25,6 @@ function SignupPageContent() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  // Get invitation token from URL
   const invitationToken = searchParams?.get('token') || null;
 
   useEffect(() => {
@@ -34,18 +33,7 @@ function SignupPageContent() {
 
   const checkInvitationRequirement = async () => {
     try {
-      // Check if there are any users in the system
-      const { data: users, error: usersError } = await supabase
-        .from('partners')
-        .select('user1_id, user2_id')
-        .limit(1);
-
-      // If we can't check via partners, try checking if we can query auth.users
-      // For now, we'll check if invitation token is provided
-      // If no token and no way to verify, we'll allow signup (first user case)
-
       if (invitationToken) {
-        // Validate invitation token
         const { data: invitation, error: invError } = await supabase
           .from('partner_invitations')
           .select('*, from_user_id, to_email, expires_at, status')
@@ -67,7 +55,6 @@ function SignupPageContent() {
             setError('This invitation has expired.');
           } else {
             setInvitationValid(true);
-            // Pre-fill email if it matches invitation
             if (invitation.to_email) {
               setEmail(invitation.to_email);
             }
@@ -75,14 +62,10 @@ function SignupPageContent() {
           }
         }
       } else {
-        // No token provided - check if there are existing users
-        // We'll allow signup but this might be the first user
-        // In production, you might want a more robust check
-        setInvitationValid(true); // Allow signup if no token (first user scenario)
+        setInvitationValid(true);
       }
     } catch (err) {
       console.error('Error checking invitation:', err);
-      // On error, allow signup (assuming first user)
       setInvitationValid(true);
     } finally {
       setCheckingInvitation(false);
@@ -95,14 +78,12 @@ function SignupPageContent() {
     setLoading(true);
 
     try {
-      // If invitation token is required, validate it
       if (invitationToken && !invitationValid) {
         setError('Please use a valid invitation link to sign up.');
         setLoading(false);
         return;
       }
 
-      // Create user account
       const { data: signupData, error: signupError } = await supabase.auth.signUp({
         email,
         password,
@@ -125,7 +106,6 @@ function SignupPageContent() {
         return;
       }
 
-      // If signup was via invitation, create partner relationship
       if (invitationToken && invitationValid) {
         const { data: invitation } = await supabase
           .from('partner_invitations')
@@ -134,15 +114,13 @@ function SignupPageContent() {
           .single();
 
         if (invitation) {
-          // Determine user1 and user2 (lower UUID first for consistency)
-          const userId1 = invitation.from_user_id < signupData.user.id 
-            ? invitation.from_user_id 
+          const userId1 = invitation.from_user_id < signupData.user.id
+            ? invitation.from_user_id
             : signupData.user.id;
-          const userId2 = invitation.from_user_id < signupData.user.id 
-            ? signupData.user.id 
+          const userId2 = invitation.from_user_id < signupData.user.id
+            ? signupData.user.id
             : invitation.from_user_id;
 
-          // Create partner relationship
           const { data: partnerData, error: partnerError } = await supabase
             .from('partners')
             .insert({
@@ -156,29 +134,13 @@ function SignupPageContent() {
 
           if (partnerError) {
             console.error('Error creating partner relationship:', partnerError);
-            // Log detailed error for debugging
-            console.error('Partner creation details:', {
-              userId1,
-              userId2,
-              currentUserId: signupData.user.id,
-              invitationFromUserId: invitation.from_user_id,
-              error: partnerError,
-            });
-            // Still continue with signup, but show a warning
             setError('Account created successfully, but partner linking failed. Please contact support or try linking manually from Settings.');
-          } else if (partnerData) {
-            console.log('Partner relationship created successfully:', partnerData);
           }
 
-          // Mark invitation as accepted
-          const { error: updateError } = await supabase
+          await supabase
             .from('partner_invitations')
             .update({ status: 'accepted' })
             .eq('token', invitationToken);
-          
-          if (updateError) {
-            console.error('Error updating invitation status:', updateError);
-          }
         }
       }
 
@@ -195,15 +157,13 @@ function SignupPageContent() {
   if (checkingInvitation) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
-          <CardDescription>
-            Validating invitation...
-          </CardDescription>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardDescription>Validating invitation...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            Loading...
+          <div className="flex items-center justify-center py-8">
+            <div className="h-8 w-8 rounded-full border-2 border-[var(--primary)]/30 border-t-[var(--primary)] animate-spin" />
           </div>
         </CardContent>
       </Card>
@@ -213,21 +173,19 @@ function SignupPageContent() {
   if (invitationToken && !invitationValid) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Invalid Invitation</CardTitle>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Invalid Invitation</CardTitle>
           <CardDescription>
             This invitation link is invalid or has expired.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-sm text-red-600 dark:text-red-400">
+          <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 p-3 text-sm text-[var(--danger)]">
             {error || 'Please contact your partner for a new invitation link.'}
           </div>
           <div className="text-center">
             <Link href="/login">
-              <Button variant="outline">
-                Back to Login
-              </Button>
+              <Button variant="outline">Back to Login</Button>
             </Link>
           </div>
         </CardContent>
@@ -238,41 +196,44 @@ function SignupPageContent() {
   if (success) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Success!</CardTitle>
-          <CardDescription>
-            Your account has been created. Redirecting...
-          </CardDescription>
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-[var(--success)]/10 flex items-center justify-center">
+            <svg className="h-8 w-8 text-[var(--success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <CardTitle className="text-2xl">Account Created!</CardTitle>
+          <CardDescription>Redirecting to dashboard...</CardDescription>
         </CardHeader>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sign Up</CardTitle>
+    <Card className="backdrop-blur-sm">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Create account</CardTitle>
         <CardDescription>
-          {invitationToken 
-            ? invitationInfo?.fromEmail 
-              ? `You've been invited by ${invitationInfo.fromEmail}. Create your account to join them.`
-              : 'Create your account with your invitation.'
-            : 'Create a new account to get started'}
+          {invitationToken
+            ? invitationInfo?.fromEmail
+              ? `You've been invited by ${invitationInfo.fromEmail}`
+              : 'Create your account with your invitation'
+            : 'Start tracking your expenses today'}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!invitationToken && (
-          <div className="mb-4 p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
+          <div className="mb-5 rounded-xl bg-[var(--primary)]/5 border border-[var(--primary)]/10 p-4">
+            <p className="text-sm text-[var(--primary)]">
               <strong>Note:</strong> This site is invitation-only. If you already have an account, please{' '}
-              <Link href="/login" className="underline font-medium">
+              <Link href="/login" className="underline font-semibold">
                 sign in
               </Link>
-              . To invite your partner, sign up first, then send them an invitation from the settings page.
+              . To invite your partner, sign up first, then send them an invitation from settings.
             </p>
           </div>
         )}
-        <form onSubmit={handleSignup} className="space-y-4">
+        <form onSubmit={handleSignup} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
             <Input
@@ -302,7 +263,7 @@ function SignupPageContent() {
             <Input
               id="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="Min 6 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -311,16 +272,23 @@ function SignupPageContent() {
             />
           </div>
           {error && (
-            <div className="text-sm text-red-600 dark:text-red-400">
+            <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 p-3 text-sm text-[var(--danger)]">
               {error}
             </div>
           )}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating account...' : 'Sign Up'}
+          <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                Creating account...
+              </span>
+            ) : (
+              'Sign Up'
+            )}
           </Button>
-          <div className="text-center text-sm">
+          <div className="text-center text-sm text-[var(--muted)]">
             Already have an account?{' '}
-            <Link href="/login" className="text-foreground hover:underline">
+            <Link href="/login" className="font-semibold text-[var(--primary)] hover:underline">
               Sign in
             </Link>
           </div>
@@ -334,13 +302,13 @@ export default function SignupPage() {
   return (
     <Suspense fallback={
       <Card>
-        <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Sign Up</CardTitle>
           <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            Loading...
+          <div className="flex items-center justify-center py-8">
+            <div className="h-8 w-8 rounded-full border-2 border-[var(--primary)]/30 border-t-[var(--primary)] animate-spin" />
           </div>
         </CardContent>
       </Card>

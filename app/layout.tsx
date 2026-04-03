@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Expense Tracker - Manage Your Expenses Together",
-  description: "A collaborative expense tracker for couples",
+  title: "Chilav - Smart Expense Tracking",
+  description: "A collaborative expense tracker for couples - Track, manage, and analyze your finances together",
 };
 
 export default function RootLayout({
@@ -33,7 +33,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <PartnerProvider>
-        {children}
+              {children}
             </PartnerProvider>
           </AuthProvider>
         </ThemeProvider>

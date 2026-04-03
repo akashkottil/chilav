@@ -42,33 +42,24 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
     payment_source_id: expense?.payment_source_id || null,
   });
 
-  // Determine partner's user ID
   useEffect(() => {
     if (!partner || !user) {
       setPartnerUser(null);
       return;
     }
-
     const partnerUserId = partner.user1_id === user.id ? partner.user2_id : partner.user1_id;
-    setPartnerUser({
-      id: partnerUserId,
-      email: '',
-      name: 'Partner',
-    });
+    setPartnerUser({ id: partnerUserId, email: '', name: 'Partner' });
   }, [partner, user]);
 
-  // Get current user's name from user metadata
   const currentUserName = user?.user_metadata?.full_name || user?.email || 'You';
   const partnerUserName = 'Partner';
 
   const [errors, setErrors] = useState<string[]>([]);
 
-  // Get subcategories for the selected category
   const availableSubcategories = subcategories.filter(
     sub => sub.category_id === formData.category_id
   );
 
-  // Check if Credit Card Repayment category is selected
   const isCreditCardRepaymentCategory = !!categories.find(
     cat => cat.id === formData.category_id && cat.name === 'Credit Card Repayment'
   );
@@ -76,14 +67,11 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors([]);
-
-    // Validate form data
     const validationErrors = validateExpense(formData);
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       return;
     }
-
     await onSubmit(formData);
   };
 
@@ -100,9 +88,9 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
         <CardTitle>{expense ? 'Edit Expense' : 'Add New Expense'}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label htmlFor="amount">Amount (INR)</Label>
             <Input
               id="amount"
               type="number"
@@ -122,7 +110,6 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
               value={formData.category_id}
               onChange={(e) => {
                 handleChange('category_id', e.target.value);
-                // Clear subcategory when category changes
                 handleChange('subcategory_id', null);
               }}
               required
@@ -171,7 +158,6 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
                 disabled={loading}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="time">Time (Optional)</Label>
               <Input
@@ -184,7 +170,6 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
             </div>
           </div>
 
-          {/* Payment Source Dropdown */}
           <div className="space-y-2">
             <Label htmlFor="payment_source_id">Payment Source (Optional)</Label>
             <Select
@@ -202,7 +187,6 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
             </Select>
           </div>
 
-          {/* Who Paid Dropdown - Only show if partner exists */}
           {partner && user && (
             <div className="space-y-2">
               <Label htmlFor="paid_by_user_id">Who Paid (Optional)</Label>
@@ -219,24 +203,20 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
             </div>
           )}
 
-          {/* Mark as Shared Expense - Only show if partner exists */}
           {partner ? (
             <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <input
                   type="checkbox"
                   id="is_shared"
                   checked={formData.is_shared || false}
                   onChange={(e) => {
                     handleChange('is_shared', e.target.checked);
-                    // If unchecking shared, clear split amounts
                     if (!e.target.checked) {
                       handleChange('amount_paid_by_user', null);
                       handleChange('amount_paid_by_partner', null);
                     } else {
-                      // If checking shared, set default split (equal or based on who paid)
                       if (!formData.amount_paid_by_user && !formData.amount_paid_by_partner) {
-                        // Default: split equally
                         const half = formData.amount / 2;
                         handleChange('amount_paid_by_user', half);
                         handleChange('amount_paid_by_partner', half);
@@ -244,28 +224,23 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
                     }
                   }}
                   disabled={loading}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]"
                 />
                 <Label htmlFor="is_shared" className="cursor-pointer">
                   Mark as shared expense
                 </Label>
               </div>
 
-              {/* Split Expense Fields - Show when shared is checked */}
               {formData.is_shared && (
-                <div className="pl-6 space-y-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                  <Label className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    Split the Expense (Optional)
-                  </Label>
-                  <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
+                <div className="ml-7 p-4 rounded-xl bg-[var(--primary)]/5 border border-[var(--primary)]/15 space-y-3">
+                  <p className="text-sm font-semibold text-[var(--primary)]">Split the Expense</p>
+                  <p className="text-xs text-[var(--muted)]">
                     Specify how much each person paid. Total must equal the expense amount.
                   </p>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="amount_paid_by_user" className="text-xs">
-                        Your Share (₹)
-                      </Label>
+                      <Label htmlFor="amount_paid_by_user" className="text-xs">Your Share (INR)</Label>
                       <Input
                         id="amount_paid_by_user"
                         type="number"
@@ -276,19 +251,14 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
                         onChange={(e) => {
                           const value = parseFloat(e.target.value) || 0;
                           handleChange('amount_paid_by_user', value);
-                          // Auto-calculate partner's share
-                          const remaining = Math.max(0, formData.amount - value);
-                          handleChange('amount_paid_by_partner', remaining);
+                          handleChange('amount_paid_by_partner', Math.max(0, formData.amount - value));
                         }}
                         disabled={loading}
                         placeholder="0.00"
                       />
                     </div>
-                    
                     <div className="space-y-2">
-                      <Label htmlFor="amount_paid_by_partner" className="text-xs">
-                        Partner's Share (₹)
-                      </Label>
+                      <Label htmlFor="amount_paid_by_partner" className="text-xs">Partner&apos;s Share (INR)</Label>
                       <Input
                         id="amount_paid_by_partner"
                         type="number"
@@ -299,9 +269,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
                         onChange={(e) => {
                           const value = parseFloat(e.target.value) || 0;
                           handleChange('amount_paid_by_partner', value);
-                          // Auto-calculate user's share
-                          const remaining = Math.max(0, formData.amount - value);
-                          handleChange('amount_paid_by_user', remaining);
+                          handleChange('amount_paid_by_user', Math.max(0, formData.amount - value));
                         }}
                         disabled={loading}
                         placeholder="0.00"
@@ -309,34 +277,26 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
                     </div>
                   </div>
 
-                  {/* Show total and validation */}
-                  <div className="text-xs pt-2 border-t border-blue-200 dark:border-blue-700">
-                    <div className="flex justify-between items-center">
-                      <span className="text-blue-700 dark:text-blue-300">Total:</span>
-                      <span className={`font-medium ${
-                        (formData.amount_paid_by_user || 0) + (formData.amount_paid_by_partner || 0) === formData.amount
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        ₹{((formData.amount_paid_by_user || 0) + (formData.amount_paid_by_partner || 0)).toFixed(2)}
-                        {' / '}
-                        ₹{formData.amount.toFixed(2)}
-                      </span>
-                    </div>
-                    {(formData.amount_paid_by_user || 0) + (formData.amount_paid_by_partner || 0) !== formData.amount && (
-                      <p className="text-red-600 dark:text-red-400 mt-1">
-                        Split amounts must equal total expense amount
-                      </p>
-                    )}
+                  <div className="text-xs pt-2 border-t border-[var(--primary)]/15 flex justify-between items-center">
+                    <span className="text-[var(--muted)]">Total:</span>
+                    <span className={`font-bold ${
+                      (formData.amount_paid_by_user || 0) + (formData.amount_paid_by_partner || 0) === formData.amount
+                        ? 'text-[var(--success)]'
+                        : 'text-[var(--danger)]'
+                    }`}>
+                      INR {((formData.amount_paid_by_user || 0) + (formData.amount_paid_by_partner || 0)).toFixed(2)}
+                      {' / '}
+                      INR {formData.amount.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="p-3 rounded-md bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                <strong>Note:</strong> To mark expenses as shared, you need to link with a partner first. 
-                Go to <a href="/settings" className="underline text-blue-600 dark:text-blue-400">Settings</a> to send an invitation.
+            <div className="rounded-xl bg-[var(--surface-hover)] p-4">
+              <p className="text-xs text-[var(--muted)]">
+                To mark expenses as shared, link with a partner in{' '}
+                <a href="/settings" className="font-semibold text-[var(--primary)] hover:underline">Settings</a>.
               </p>
             </div>
           )}
@@ -354,21 +314,26 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
           </div>
 
           {errors.length > 0 && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-3">
-              <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
+            <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 p-4">
+              <ul className="text-sm text-[var(--danger)] space-y-1">
                 {errors.map((error, index) => (
-                  <li key={index}>• {error}</li>
+                  <li key={index}>&#x2022; {error}</li>
                 ))}
               </ul>
             </div>
           )}
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-3 justify-end pt-2">
             <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : expense ? 'Update' : 'Add Expense'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Saving...
+                </span>
+              ) : expense ? 'Update' : 'Add Expense'}
             </Button>
           </div>
         </form>
@@ -376,4 +341,3 @@ export function ExpenseForm({ expense, onSubmit, onCancel, loading }: ExpenseFor
     </Card>
   );
 }
-
